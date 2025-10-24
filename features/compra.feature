@@ -5,4 +5,4 @@ Feature: Proceso de compra
     And agrega el primer producto al carrito
     When inicia el proceso de compra
     And completa los datos de envío
-    Then ve el mensaje de confirmación de compranpm install
+    Then ve el mensaje de confirmación de compra

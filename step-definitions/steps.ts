@@ -1,76 +1,77 @@
 import { Given, When, Then } from '@cucumber/cucumber';
-import { chromium, Browser, Page } from 'playwright';
 import { LoginPage } from '../pages/LoginPage';
-
 import { ProductsPage } from '../pages/ProductsPage';
 import { CartPage } from '../pages/CartPage';
-
 import { CheckoutPage } from '../pages/CheckoutPage';
 
+// Ya no usamos variables de navegador a nivel de módulo.
+// Las instancias de browser/page las maneja support/world.ts (Before/After).
 
-let browser: Browser;
-let page: Page;
-let loginPage: LoginPage;
-
-let productsPage: ProductsPage;
-let cartPage: CartPage;
-
-let checkoutPage: CheckoutPage;
-
-Given('el usuario navega a la página de login', async () => {
-  browser = await chromium.launch();
-  page = await browser.newPage();
-  loginPage = new LoginPage(page);
+Given('el usuario navega a la página de login', async function () {
+  const page = (this as any).page;
+  const loginPage = new LoginPage(page);
   await loginPage.goto();
 });
 
-When('ingresa {string} y {string}', async (username: string, password: string) => {
+When('ingresa {string} y {string}', async function (username: string, password: string) {
+  const page = (this as any).page;
+  const loginPage = new LoginPage(page);
   await loginPage.login(username, password);
 });
 
-Then('accede a la página de productos', async () => {
+Then('accede a la página de productos', async function () {
+  const page = (this as any).page;
+  const loginPage = new LoginPage(page);
   await loginPage.assertLoginSuccess();
-  await browser.close();
+  // NO cerrar browser aquí; After() en support/world.ts lo hará por escenario
 });
 
-Then('ve un mensaje de error', async () => {
+Then('ve un mensaje de error', async function () {
+  const page = (this as any).page;
+  const loginPage = new LoginPage(page);
   await loginPage.assertLoginError();
-  await browser.close();
 });
 
-Given('el usuario inicia sesión como {string} con {string}', async (username: string, password: string) => {
-  browser = await chromium.launch();
-  page = await browser.newPage();
-  loginPage = new LoginPage(page);
+Given('el usuario inicia sesión como {string} con {string}', async function (username: string, password: string) {
+  const page = (this as any).page;
+  const loginPage = new LoginPage(page);
   await loginPage.goto();
   await loginPage.login(username, password);
-  productsPage = new ProductsPage(page);
+  // no cerramos nada, creamos objects cuando haga falta
 });
 
-When('agrega el primer producto al carrito', async () => {
+When('agrega el primer producto al carrito', async function () {
+  const page = (this as any).page;
+  const productsPage = new ProductsPage(page);
   await productsPage.addFirstProductToCart();
 });
 
-Then('el carrito muestra {int} producto', async (count: number) => {
-  cartPage = new CartPage(page);
+Then('el carrito muestra {int} producto', async function (count: number) {
+  const page = (this as any).page;
+  const cartPage = new CartPage(page);
   await cartPage.goto();
   await cartPage.assertCartItemCount(count);
-  await browser.close();
+  // No cerrar el browser aquí.
 });
 
-
-When('inicia el proceso de compra', async () => {
+When('inicia el proceso de compra', async function () {
+  const page = (this as any).page;
+  const cartPage = new CartPage(page);
+  // En lugar de depender de una variable global cartPage, la creamos aquí
   await cartPage.goto();
   await cartPage.startCheckout();
-  checkoutPage = new CheckoutPage(page);
+  // checkoutPage se puede crear cuando se necesite
 });
 
-When('completa los datos de envío', async () => {
+When('completa los datos de envío', async function () {
+  const page = (this as any).page;
+  const checkoutPage = new CheckoutPage(page);
   await checkoutPage.fillCheckoutForm('Rosalba', 'QA', '12345');
   await checkoutPage.finishCheckout();
 });
 
-Then('ve el mensaje de confirmación de compra', async () => {
+Then('ve el mensaje de confirmación de compra', async function () {
+  const page = (this as any).page;
+  const checkoutPage = new CheckoutPage(page);
   await checkoutPage.assertConfirmationMessage();
-  await browser.close();
 });
